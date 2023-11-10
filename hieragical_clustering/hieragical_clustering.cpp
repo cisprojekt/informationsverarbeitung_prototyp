@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstring>
+#include <memory>
 #include "hieragical_clustering.h"
 using namespace std;
 
@@ -7,17 +8,16 @@ int main() {
     cout << "Hello World";
     return 0;
     }
-
-int is_visited(unsigned char* bitset, int i){
     //Check if node i was visited.
-    return bitset[i >> 3] & (1 << (i & 7));
+int is_visited(unsigned char* bitset, int i){
+
+    return bitset[i >> 3] & (1 << (i & 7)); // i & 7 is modulo 8 works only for modulo 2^n
 }
 
+    //Mark node i as visited.
 void set_visited(unsigned char* bitset, int i){
-    /*
-    Mark node i as visited.
-    */
-    bitset[i >> 3] |= 1 << (i & 7);
+
+    bitset[i >> 3] |= 1 << (i & 7); // i & 7 is modulo 8 works only for modulo 2^n
 }
 
 
@@ -43,9 +43,9 @@ void cluster_monocrit(double** Z, double* MC, int* T,
     */
 
     int k, i_lc, i_rc, root, n_cluster = 0, cluster_leader = -1;
-    int* curr_node = new int[n];
+    unique_ptr<int[]> curr_node(new int[n]);
     int visited_size = (((n * 2) - 1) >> 3) + 1;
-    unsigned char* visited = new unsigned char[visited_size];
+    unique_ptr<unsigned char[]> visited(new unsigned char[visited_size]);
 
     //here was some memory error catdch code
 
@@ -60,15 +60,15 @@ void cluster_monocrit(double** Z, double* MC, int* T,
             cluster_leader = root;
             n_cluster += 1;
         }
-        if (i_lc >= n && !is_visited(visited, i_lc)) {
-            set_visited(visited, i_lc);
+        if (i_lc >= n && !is_visited(visited.get(), i_lc)) {
+            set_visited(visited.get(), i_lc);
             k += 1;
             curr_node[k] = i_lc;
             continue;
             }
 
-        if (i_rc >= n && !is_visited(visited, i_rc)) {
-            set_visited(visited, i_rc);
+        if (i_rc >= n && !is_visited(visited.get(), i_rc)) {
+            set_visited(visited.get(), i_rc);
             k += 1;
             curr_node[k] = i_rc;
             continue;
@@ -85,7 +85,6 @@ void cluster_monocrit(double** Z, double* MC, int* T,
             cluster_leader = -1;
         }
         k -= 1;
-    delete visited;
     }
 }
 
