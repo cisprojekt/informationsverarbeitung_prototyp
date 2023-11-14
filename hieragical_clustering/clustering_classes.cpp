@@ -1,17 +1,20 @@
 #include <iostream>
 #include <vector>
 
+
+//
 class DistanceMatrix {
 
 	private:
 		unsigned int dim;
-		std::vector<std:vector<double> > datapoints; //Lieber Eigen::Matrix ?	
+		double *datapoints; //Lieber Eigen::Matrix ?	
 		//obere Dreiecksmatrix um Redundanz zu vermeiden
-		std:vector<double> datapoints_alt; //eindimensionale Repräsentation mit Indexmanagment
+		// std:vector<double> datapoints_alt; eindimensionale Repräsentation mit Indexmanagment
 
 	public:
 		DistamceMatrix();
 		~DistanceMatrix();
+		double *getmatrix();
 
 }
 
@@ -21,13 +24,30 @@ DistanceMatrix::DistanceMatrix() { //Distanzmatrix aus Stream also hochgeladenem
 
 }
 
-DistanceMatrix::DistanceMatrix(double **xy) { //Distanzmatrix aus xy-Wertetabelle
+DistanceMatrix::DistanceMatrix(double *xy, unsigned int n) { //Distanzmatrix aus xy-Wertetabelle, xy hat folgende Struktur: Array bestehend pointern mit 2 double Werten [[2.43, 4.32], [1.23, 7.11], ...
 
-	this->data = convert_xy_table_to_distmat();
-	dim = data.size();
+	this->datapoints = convert_xy_table_to_distmat(xy, n);
+	this->dim = n;
 
 DistanceMatrix::~DistanceMatrix() {
 }
+
+double *convert_xy_table_to_distmat(double *xy_table, unsigned int n) {
+
+	double *distmat = new double[(n*(n-1)/2];
+	int k, i, j;
+	for (i=k=0; i<n, i++) {
+		for (j=i+1; j<n, j++) {
+			distmat[k] = sqrt(pow((xy_table[i][0]+xy_table[j][0]), 2) + pow((xy_table[i][1]+xy_table[j][1])                     //bis hierhin ist die Funktion auch ganz gut als generische Funktion -> könnte ausgelagert werden. Noch generischer mit distance(x[i], x[j]) stattt sqrt ...
+			k++;
+		}
+	}
+	return distmat;
+}
+
+double *getmatrix() {
+	return this->datapoints;
+}			
 
 class ClusterMap {
 
@@ -76,7 +96,7 @@ class Cluster {
 	public:
 		Cluster(unsigned int ID);
 		~Cluster();
-
+		unsigned int getID();
 
 }
 
@@ -88,7 +108,11 @@ Cluster::~Cluster() {
 
 }
 
-class Dendrogram {
+unsigned int getID() {
+			return this->ID;
+		}
+
+class Dendrogram {  //bzw. linkage-matrix
 
 }
 
