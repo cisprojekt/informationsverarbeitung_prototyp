@@ -1,43 +1,204 @@
 <html>
 <head>
 <style>
-    .myPlot {
-        outline: thin solid black;
-    }   
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
+    .myUpload {
+        border: 1px solid #00b894;
+        border-radius: 5px;
+        font-family: "Roboto", sans-serif;
+        width: 100%;
+        height: 4%;
+    }
+    
+    .myUpload::file-selector-button {
+        margin: 10px;
+        border-radius: 5px;
+        border: 1px solid #00b894;
+        transition: background .2 ease-in-out;
+        cursor: pointer;
+        background-color: rgba(0, 0, 0, 0);
+        color: #ffffff;
+        font-family: "Roboto", sans-serif;
+    }
+    
+    .myUpload::file-selector-button:hover {
+        background: #00b894;
+    }
+    
+    .center {
+        margin: auto;
+        width: 50%;
+    }
+    
+    body {
+        background-color: #212121;      
+        text-align: center;
+        font-family: "Roboto", sans-serif;
+        color: #ffffff;
+        height: 100%;
+    }
+    
+    h1 {
+        margin-top: 2%;
+        margin-bottom: 2%;
+        color: white;
+        font-family: "Roboto", sans-serif;
+        text-decoration: underline;
+        text-decoration-color: #6c5ce7;
+    }
+    
+    .myTextarea {
+        width: 100%;
+        border: 1px solid #00b894;
+        border-radius: 5px;
+        background-color: rgba(0, 0, 0, 0);
+        color: #ffffff;
+        height: 15%;
+    }
+    
+    .myButton {
+        width: 49.8%;
+        color: #ffffff;
+        height: 100%;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    
+    .cancel {
+        background-color: rgba(0, 0, 0, 0);
+        border: 1px solid #00b894;
+    }
+    
+    .send {
+        background-color: #00b894;
+        border: 1px solid #00b894;
+    }
+    
+    .container {
+        height: 4%;
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    html, body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+    }
+    
+    .myNumber {
+        border: 1px solid #00b894;
+        border-radius: 5px;
+        font-family: "Roboto", sans-serif;
+        width: 100%;
+        height: 4%;
+        background-color: rgba(0, 0, 0, 0);
+        color: #ffffff;
+    }
+    
+    .myNumber::-webkit-inner-spin-button {
+        opacity: 0;
+    }
+    
+    .center p {
+        text-align: left;
+    }
 </style>
-<script src="https://d3js.org/d3.v4.min.js"></script>
-<script>
-    var startTime = performance.now();
-    var N = 100; // number of points
-    var points = create_rand_points();
+</head>
+<body>
+    <div class="center" id="center">
+    <h1>Please choose your file:</h1>
+    <form>
+    <input type="file" accept=".txt" class="myUpload" name="files[]" id="fileUpload"/>
+    <br>
+    <br>
+    <textarea id="fileContent" class="myTextarea" placeholder="This is where you will see the content of your file."></textarea>
+    <br>
+    <br>
+    <input type="number" id="numClusters" placeholder="Number of clusters (1-8)" min="1" max="8" class="myNumber">
+    <br>
+    <br>
+    <div class="container">
+    <input type="button" class="myButton cancel" value="Cancel" id="cancelButton">
+    <input type="button" class="myButton send" value="Send" id="sendButton">
+    </div>       
+    </form>
+    <p style="myPara">&#128712; Press the button "T" on your Keyboard to toggle the view between clusters and all points.</p>
+    </div>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script>
+    
+    // definitely not a rick roll
+    document.getElementById("cancelButton").onclick = function () {
+         window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+    };
+        
+    var fileContent;
+        
+    // listens for change in the file upload and reads
+    // the file content
+    document.getElementById("fileUpload").addEventListener("change", function() {
+        var file = this.files[0];
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var contents = e.target.result;
+            fileContent = stringToArray(contents);
+            document.getElementById("fileContent").value = contents;
+        };
+        reader.readAsText(file);
+    });    
+    
+        
+    // reads a string and converts this string to
+    // a javascript array
+    // example: "[[1,2],[3,4]]" -> [[1,2],[3,4]]
+    function stringToArray(string) {
+        
+        // create new array with integer type
+        let intPoints = [];
+        
+        // parse input string to javascript array
+        let strPoints = JSON.parse(string);
+        
+        // iterare over the string list and convert
+        // each point to integer
+        for (let i = 0; i < strPoints.length; i++) {
+            currPoint = [];
+            currPoint.push(parseInt(strPoints[i][0]));
+            currPoint.push(parseInt(strPoints[i][1]));
+            intPoints.push(currPoint);
+        }
+        
+        return intPoints;
+    }
+    
+    // #########################
+    // ### ACTUAL CLUSTERING ###
+    // #########################
+    var N;
+    var points;
     var smallest_dist = 0;
     var point_a;
     var point_b;
-    var dist_mat = create_empty_matrix();
+    var dist_mat;
     var infty = 0; // will be set to the largest distance value in matrix
     var cluster = [];
-    calculate_distance_matrix();
-    get_clusters(4);
-    
-    var endTime = performance.now();
-    console.log(`Call to doSomething took ${endTime - startTime} milliseconds`);
-    
-    // calculate first distance matrix
-    calculate_distance_matrix();
-    
-    // create n random points
-    // between 0 and 100
-    function create_rand_points() {
         
-        var points = [];
+    // event listener for send button
+    // will remove the overview and create svg element
+    // maybe replace later with redirect to new website
+    // for simple layout
+    document.getElementById("sendButton").onclick = function () {
+        document.getElementById("center").style.display = "none";
+        points = fileContent;
+        N = points.length;
+        dist_mat = create_empty_matrix();
+        calculate_distance_matrix();
+        let numClusters = document.getElementById("numClusters").value
+        get_clusters(numClusters);
+        create_svg();
+    };
         
-        for (let i = 0; i < N; i++) {
-            points.push([Math.floor(Math.random() * 501), Math.floor(Math.random() * 501)]);
-        }
-        
-        return points;
-    }
-    
     // finds the smallest distance for two points
     // inside a distance matrix
     // returns this distance and their points
@@ -66,7 +227,7 @@
         
         return mat;
     }
-    
+        
     // calculate distance matrix
     function calculate_distance_matrix() {
         
@@ -85,14 +246,13 @@
         
         infty++;
     }
-    
+
     // calculate the clusters using
     // agglomerative clustering
     function get_clusters(num_clusters) {
         
         let new_cluster_idx = N; 
         let current_n_clusters = N;
-        console.log("calculated distance matrix")
         
         // initialize clusters
         for (let i = 0; i < N; i++) {
@@ -102,8 +262,6 @@
         // run until desired number of clusters
         // have been calculated
         while (current_n_clusters > num_clusters) {
-            
-            console.log("current cluster idx: " + new_cluster_idx);
             
             // find the two clusters to merge together
             get_smallest_distance();
@@ -139,53 +297,105 @@
             // print the points inside the clusters
             if (current_n_clusters == num_clusters) {
                 for (let i = 0; i < N; i++) {
-                    document.write("Objekt " + i + " ist in Cluster " + cluster[i] + "<br>");
+                    console.log("Der Punkt " + i + " ist im Cluster " + cluster[i]);
                 }
             }
         }
     }
     
-    // Create SVG element
-    var svg = d3.select("body").append("svg")
-        .attr("width", 1000)
-        .attr("height", 1000)
-        .attr("class", "myPlot");
-    var g = svg.append("g");
-    
-    // Add points according to cluster
-    map = {};
-    for (let i = 0; i < N; i++) {
-        if (cluster[i] in map) {
-            map[cluster[i]].push(points[i]);    
-        } else {
-            map[cluster[i]] = [points[i]]
+    // appends and svg graphic containing
+    // the points in each cluster in
+    // different colors
+    function create_svg() {
+        
+        // create svg elements
+        var svg = d3.select("body").append("svg")
+            //.attr("preserveAspectRatio", "xMinYMin meet")
+            //.attr("viewBox", "0 0 960 500")
+            //.append('rect')
+            .attr('width', window.innerWidth)
+            .attr('height', window.innerHeight);
+        
+        // add points according to cluster
+        // in a dictionary where the key
+        // represents the cluster id and the alue
+        // is a list of points in this cluster
+        var map = {};
+        for (let i = 0; i < N; i++) {
+            if (cluster[i] in map) {
+                map[cluster[i]].push(points[i]);    
+            } else {
+                map[cluster[i]] = [points[i]]
+            }
         }
+        
+        // for scaling on the whole page
+        // use xScale and yScale scaleLinear
+        var minScale = Math.min(window.innerWidth, window.innerHeight)
+        var xScale = d3.scaleLinear().domain([0, 500]).range([0, minScale]);
+        var yScale = d3.scaleLinear().domain([0, 500]).range([0, minScale]);
+        
+        // list of colors for each cluster
+        var counter = 0;
+        const colors = ["#00b894", "#00cec9", "#0984e3", "#6c5ce7", "#fdcb6e", "#e17055", "#d63031", "#e84393"];
+        
+        let showAll = true;
+        
+        // print all points if button t is pressed
+        document.body.addEventListener("keydown", function(event) {
+            
+            // check whether button t is pressed
+            if ((event.key === 't' || event.key === 'T') && showAll == false) {
+                
+                // plot all points in each cluster
+                svg.selectAll("circle").remove();
+                counter = 0;
+                for (const [key, value] of Object.entries(map)) {
+                    let group = svg.append("g");
+                    color = colors[counter];
+                    counter++;
+                    cluster_points = value;
+                    circles = group.selectAll("circle").data(cluster_points).enter().append("circle");
+                    circles.attr("cx", function(d) { return xScale(d[0]); }).attr("cy", function(d) { return yScale(d[1]); });
+                    circles.attr("r", 5);
+                    circles.style("fill", color);
+                    showAll = true;
+                }
+            } else if ((event.key === 't' || event.key === 'T') && showAll == true) {
+                
+                // plot only the average of each cluster
+                svg.selectAll("circle").remove();
+                counter = 0;
+                
+                // call the function to plot cluster averages
+                plotAverage();
+            }
+        
+        
+        });
+        
+        // function to plot the average
+        // (plot the clusters)
+        // the size of the circle is calculated as
+        // #points in cluster+4
+        function plotAverage() {
+                    for (const [key, value] of Object.entries(map)) {
+                    let group = svg.append("g");
+                    color = colors[counter];
+                    counter++;
+                    let avg_x = value.reduce((total, point) => total + point[0], 0) / value.length;
+                    let avg_y = value.reduce((total, point) => total + point[1], 0) / value.length;
+                    let avg_points = [[avg_x, avg_y]];
+                    circles = group.selectAll("circle").data(avg_points).enter().append("circle");
+                    circles.attr("cx", function(d) { return xScale(d[0]); }).attr("cy", function(d) { return yScale(d[1]); });
+                    circles.attr("r", value.length+4);
+                    circles.style("fill", color);
+                    showAll = false;
+                }
+        }
+        
+        plotAverage();
     }
-    
-    // TODO: get average point for each cluster, do MDC then plot
-    // counter for the color list
-    var counter = 0;
-    const colors = ["red", "green", "blue", "orange", "purple"];
-    
-    for (const [key, value] of Object.entries(map)) {
-        // color = Math.floor(Math.random()*16777215).toString(16);
-        color = colors[counter];
-        counter++;
-        console.log(color);
-        cluster_points = value;
-        circles = g.selectAll("circle").data(cluster_points).enter().append("circle");
-        circles.attr("cx", function(d) { return d[0]; }).attr("cy", function(d) { return d[1]; });
-        circles.attr("r", 5);
-        circles.style("fill", color);
-    }
-    
-    circles = g.selectAll("circle").data([[400, 400]]).enter().append("circle");
-        circles.attr("cx", function(d) { return d[0]; }).attr("cy", function(d) { return d[1]; });
-        circles.attr("r", 5);
-        circles.style("fill", "blue");
-    
-</script>
-</head>  
-<body>
+    </script>
 </body>
 </html>
