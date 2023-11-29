@@ -1,0 +1,17 @@
+name: C++ CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: build
+      run: g++ dm_hclust_interface/cluster.cpp dm_hclust_interface/fastcluster.cpp -o test/points_complete/cluster
+    - name: points_complete
+      run: |
+        cd test/points_complete/
+        bash ./points_complete.sh
