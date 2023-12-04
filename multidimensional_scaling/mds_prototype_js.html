@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<canvas id="myChart"></canvas>
+<script>
+function mds(distanceMatrix, dimensions=2) {
+	var n = distanceMatrix.length;
+	var C = numeric.identity(n);
+	C = numeric.sub(C, numeric.mul(numeric.rep([n, n], 1), 1/n));
+	var DC = numeric.mul(-1/2, numeric.dot(numeric.dot(C, numeric.pow(distanceMatrix, 2)), C));
+	
+	var eigen = numeric.eig(DC);
+	var evals = eigen.lambda.x;
+	var evecs = eigen.E.x;
+
+	var idx = numeric.linspace(0, evals.length-1, evals.length).sort(function(a, b){return evals[b]-evals[a]});
+	evals = idx.map(function(i){return evals[i]});
+	evecs = idx.map(function(i){return evecs[i]});
+
+	var w = evals.map(function(val, i){return val > 0 ? i : null}).filter(Number.isInteger);
+	var L = numeric.diag(evals.filter(function(val, i){return w.includes(i)}).map(Math.sqrt));
+	var V = evecs.filter(function(val, i){return w.includes(i)});
+
+	V = numeric.transpose(V)
+	var M = numeric.dot(V, L);
+
+	return M;
+}
+
+function isEuclidean(distanceMatrix) {
+	var n = distanceMatrix.length;
+	for (var i = 0; i < n; i++) {
+		for (var j = 0; j < n; j++) {
+			for (var k = 0; k < n; k++) {
+				if (distanceMatrix[i][j] > distanceMatrix[i][k] + distanceMatrix[k][j]) {
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+
+var D = [
+	[0, 3, 8, 2],
+	[3, 0, 2, 1],
+	[8, 2, 0, 3],
+	[2, 1, 3, 0]
+];
+
+console.log(isEuclidean(D));
+
+var M = mds(D);
+
+var ctx = document.getElementById("myChart").getContext("2d");
+new Chart(ctx, {
+	type: "scatter",
+	data: {
+		datasets: [{
+			label: "Points in reduced dimension",
+			data: M.map(function(val, i) {
+				return {
+					x: val[0],
+					y: val[1],
+					label: i + 1
+				};
+			}),
+			pointBackgroundColor: "blue"
+		}]
+	},
+	options: {
+		plugins: {
+			tooltip: {
+				callbacks: {
+					title: function(context) {
+						return "Point " + context[0].raw.label;
+					}
+				}
+			}
+		}
+	}
+});
+</script>
+</body>
+</html>
