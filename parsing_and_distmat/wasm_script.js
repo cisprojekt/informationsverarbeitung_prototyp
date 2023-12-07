@@ -1,7 +1,7 @@
 
 let wasmExports = null;
 
-let wasmMemory = new WebAssembly.Memory({initial: 256, maximum: 67.840});
+let wasmMemory = new WebAssembly.Memory({initial: 65.536, maximum: 65.536});
 
 let wasmTable = new WebAssembly.Table({
     'initial': 1,
@@ -29,6 +29,8 @@ async function loadWasm(){
     let wasmObj = await WebAssembly.instantiate(bytes, info);
     wasmExports = wasmObj.instance.exports;
 }
+
+loadWasm();
 
 /*
 // Fetch and instantiate the WebAssembly module
@@ -66,3 +68,12 @@ fetch('distmat.wasm')
     }
 });
 */
+/*
+function testfunc(memory){
+    console.log("hellooooooooooooooooooooo")
+    const matrix = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
+    const array = matrix.flat();
+    const array2 = new Float64Array(memory.buffer, 0, array.length*4)
+    array2.set(array)
+    var ptr = wasmExports.calculateDistanceMatrix(array2.byteOffset, 3, 3);
+    console.log(ptr);}*/
