@@ -1,14 +1,19 @@
+
+// Copyright [year] <Copyright Owner>
 #include <cmath>
 #include <string>
 #include <emscripten.h>
 
-//compiled with:
-//em++ -o distmat.js distmat.cpp -s "EXPORTED_FUNCTIONS=['_malloc', '_free', '_calculateEuclideanDistance', '_calculateEuclideanDistanceMatrix', '_calculateHammingDistance', '_calculateHammingDistanceMatrix']" -s "EXPORTED_RUNTIME_METHODS=['ccall']" -sALLOW_MEMORY_GROWTH -s MAXIMUM_MEMORY=1gb -s ABORTING_MALLOC=0
+//  compiled with:
+/* em++ -o distmat.js distmat.cpp -s "EXPORTED_FUNCTIONS=
+['_malloc', '_free', '_calculateEuclideanDistance', '_calculateEuclideanDistanceMatrix',
+ '_calculateHammingDistance', '_calculateHammingDistanceMatrix']" -s "EXPORTED_RUNTIME_METHODS=['ccall']"
+  -sALLOW_MEMORY_GROWTH -s MAXIMUM_MEMORY=1gb -s ABORTING_MALLOC=0
+*/
 
 extern "C" {
     EMSCRIPTEN_KEEPALIVE
     float calculateEuclideanDistance(float* vector1, float* vector2, int string_length) {
-
         float sumOfSquares = 0.0;
         for (size_t i = 0; i < string_length; i++) {
             float diff = vector2[i] - vector1[i];
@@ -29,11 +34,12 @@ extern "C" {
         }
         for (size_t i = 0; i < num_strings; i++) {
             for (size_t j = 0; j < i+1; j++) {
-                float distance = calculateEuclideanDistance(array+i*string_length, array+j*string_length, string_length);
+                float distance = calculateEuclideanDistance(array+i*string_length,
+                array+j*string_length, string_length);
                 distanceArray[i][j] = distance;
             }
         }
-        //flatten the array
+        // flatten the array
         float* flatArray = new float[num_strings * (num_strings + 1) / 2];
         int index = 0;
         for (size_t i = 0; i < num_strings; i++) {
@@ -42,7 +48,7 @@ extern "C" {
                 index++;
             }
         }
-        //free memory
+        // free memory
         for (size_t i = 0; i < num_strings; ++i) {
             delete[] distanceArray[i];
         }
@@ -79,7 +85,7 @@ extern "C" {
                 distanceArray[i][j] = distance;
             }
         }
-        //flatten the array
+        // flatten the array
         int* flatArray = new int[num_strings * (num_strings + 1) / 2];
         int index = 0;
         for (size_t i = 0; i < num_strings; i++) {
@@ -88,7 +94,7 @@ extern "C" {
                 index++;
             }
         }
-        //free memory
+        // free memory
         for (size_t i = 0; i < num_strings; ++i) {
             delete[] distanceArray[i];
         }
