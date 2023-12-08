@@ -1433,8 +1433,9 @@ var wasmImports = {
 var wasmExports = createWasm();
 var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors');
 var _calculateEuclideanDistance = Module['_calculateEuclideanDistance'] = createExportWrapper('calculateEuclideanDistance');
-var _calculateDistanceMatrix = Module['_calculateDistanceMatrix'] = createExportWrapper('calculateDistanceMatrix');
+var _calculateEuclideanDistanceMatrix = Module['_calculateEuclideanDistanceMatrix'] = createExportWrapper('calculateEuclideanDistanceMatrix');
 var _calculateHammingDistance = Module['_calculateHammingDistance'] = createExportWrapper('calculateHammingDistance');
+var _calculateHammingDistanceMatrix = Module['_calculateHammingDistanceMatrix'] = createExportWrapper('calculateHammingDistanceMatrix');
 var ___errno_location = createExportWrapper('__errno_location');
 var _fflush = Module['_fflush'] = createExportWrapper('fflush');
 var _malloc = Module['_malloc'] = createExportWrapper('malloc');

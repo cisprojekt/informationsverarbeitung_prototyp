@@ -1,38 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>DistMat</title>
+
     <script src="distmat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV File Reader and DistmatCalculater</title>
 </head>
 <body>
+    
+    <input type="file" id="fileInput" />
+    <button onclick="handleFile()">Read CSV</button>
+    <button onclick="onCalcButtonClick()">Calculate Distmat</button>
+
+    <!-- Link to the external JavaScript file -->
+    <!-- <script src="wasm_script.js"></script> -->
+    <div id="matrix"></div>
     <script>
-        Module.onRuntimeInitialized = function() {
-            console.log("hellooooooooooooooooooooo")
-            const matrix = [[0.0, 0.0, 1.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
-            const array = matrix.flat();
-            //console.log(array);
-             
-            let buf = Module._malloc(array.length * Float32Array.BYTES_PER_ELEMENT);
 
-            Module.HEAPF32.set(array, buf / Float32Array.BYTES_PER_ELEMENT);
-            console.log("hellooooooooooooooooooooo");
-            let resultPtr = Module.ccall('calculateDistanceMatrix', 'number', ['number','number', 'number'], [buf, 3, 3]);
-
-            let distmat = new Float32Array(Module.HEAPF32.buffer, resultPtr, array.length);
-
-            for (let i = 0; i < distmat.length; i++) {
-                console.log(distmat[i].toString());
-            }
-
-            Module._free(buf);
-        
-/* 
-            const array2 = new Float64Array(memory.buffer, 0, array.length*4)
-            array2.set(array)
-            var ptr = wasmExports.calculateDistanceMatrix(array2.byteOffset, 3, 3);
-            console.log(ptr); */
-			
-        };
     </script>
+
+    <script src="index.js"></script>
 </body>
 </html>
