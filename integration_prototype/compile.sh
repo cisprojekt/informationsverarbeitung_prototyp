@@ -1,0 +1,1 @@
+em++ -o build/clustering.js --no-entry clustering.cpp fastcluster.cpp -I /usr/include/eigen3/ -s "EXPORTED_FUNCTIONS=['_malloc', '_free', '_clusterPoints']" -s "EXPORTED_RUNTIME_METHODS=['ccall']" -s ALLOW_MEMORY_GROWTH

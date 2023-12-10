@@ -1,0 +1,193 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Clustering</title>
+    <script src="build/clustering.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+  </head>
+  <body>
+    <script>
+      console.log("Starting Clustering Program");
+      let pointsToPlot = [];
+      n = 200;
+
+      Module.onRuntimeInitialized = function () {
+        console.log("Module loaded");
+        dim = 2;
+        zoomLevels = 10;
+        maxIterations = 5;
+
+        points = new Int32Array(n * dim);
+
+        for (let i = 0; i < n * dim; i++) {
+          points[i] = Math.random() * 501;
+        }
+
+        console.log(points);
+
+        let pointsBuf = Module._malloc(n * dim * Int32Array.BYTES_PER_ELEMENT);
+        let distMatBuf = Module._malloc(
+          ((n * (n - 1)) / 2) * Float64Array.BYTES_PER_ELEMENT,
+        );
+        let heightBuf = Module._malloc(
+          (n - 1) * Float64Array.BYTES_PER_ELEMENT,
+        );
+        let mergeBuf = Module._malloc(
+          2 * (n - 1) * Int32Array.BYTES_PER_ELEMENT,
+        );
+        let labelsBuf = Module._malloc(
+          n * zoomLevels * Int32Array.BYTES_PER_ELEMENT,
+        );
+
+        Module.HEAP32.set(points, pointsBuf / points.BYTES_PER_ELEMENT);
+
+        Module.ccall(
+          "clusterPoints",
+          null,
+          [
+            "number",
+            "number",
+            "number",
+            "number",
+            "number",
+            "number",
+            "number",
+            "number",
+            "number",
+          ],
+          [
+            pointsBuf,
+            dim,
+            distMatBuf,
+            heightBuf,
+            mergeBuf,
+            labelsBuf,
+            n,
+            maxIterations,
+            zoomLevels,
+          ],
+        );
+
+        let labelsResult = new Int32Array(
+          Module.HEAP32.subarray(
+            labelsBuf / Int32Array.BYTES_PER_ELEMENT,
+            labelsBuf / Int32Array.BYTES_PER_ELEMENT + n * zoomLevels,
+          ),
+        );
+        let pointsResult = new Int32Array(
+          Module.HEAP32.subarray(
+            pointsBuf / Int32Array.BYTES_PER_ELEMENT,
+            pointsBuf / Int32Array.BYTES_PER_ELEMENT + n * dim,
+          ),
+        );
+
+        for (var i = 0; i < n * 2; i += 2) {
+          pointsToPlot.push({ x: pointsResult[i], y: pointsResult[i + 1] });
+        }
+
+        console.log(labelsResult);
+        Module._free(pointsBuf);
+        Module._free(distMatBuf);
+        Module._free(heightBuf);
+        Module._free(mergeBuf);
+        Module._free(labelsBuf);
+
+        console.log(pointsToPlot);
+
+        var svg = d3
+          .select("body")
+          .append("svg")
+          .attr("width", window.innerWidth)
+          .attr("height", window.innerHeight);
+
+        var avgX = d3.mean(pointsToPlot, function (d) {
+          return d.x;
+        });
+        var xScale = d3
+          .scaleLinear()
+          .domain([avgX - 250, avgX + 250])
+          .range([0, 500]);
+
+        var yScale = d3
+          .scaleLinear()
+          .domain([
+            0,
+            d3.max(pointsToPlot, function (d) {
+              return d.x;
+            }),
+          ])
+          .range([500, 0]);
+
+        var zoom = d3
+          .zoom()
+          .scaleExtent([1, zoomLevels - 5])
+          .on("zoom", zoomed);
+
+        svg.call(zoom);
+
+        svg
+          .selectAll("circle")
+          .data(getAverages(1))
+          .enter()
+          .append("circle")
+          .attr("cx", function (d) {
+            return xScale(d.x);
+          })
+          .attr("cy", function (d) {
+            return yScale(d.y);
+          })
+          .attr("r", 5);
+
+        function getAverages(currentZoomLevel) {
+          var sums = {};
+          for (var i = 0; i < n; i++) {
+            var label =
+              labelsResult[
+                i + n * (zoomLevels - 5 - Math.round(currentZoomLevel))
+              ];
+            var point = pointsToPlot[i];
+            if (!sums[label]) {
+              sums[label] = { x: 0, y: 0, count: 0 };
+            }
+            sums[label].x += point.x;
+            sums[label].y += point.y;
+            sums[label].count++;
+          }
+          var averages = [];
+          for (var label in sums) {
+            averages.push({
+              x: sums[label].x / sums[label].count,
+              y: sums[label].y / sums[label].count,
+            });
+          }
+
+          return averages;
+        }
+        function zoomed() {
+          var currentZoomLevel = d3.event.transform.k;
+          console.log("Zoomlevel: " + currentZoomLevel);
+
+          let averages = getAverages(currentZoomLevel);
+
+          var circles = svg.selectAll("circle").data(averages);
+          console.log(averages);
+
+          circles.exit().remove();
+
+          circles
+            .enter()
+            .append("circle")
+            .attr("r", 5)
+            .merge(circles)
+            .attr("cx", function (d) {
+              return xScale(d.x);
+            })
+            .attr("cy", function (d) {
+              return yScale(d.y);
+            })
+            .attr("transform", d3.event.transform);
+        }
+      };
+    </script>
+  </body>
+</html>
