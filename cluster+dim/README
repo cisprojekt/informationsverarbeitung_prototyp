@@ -1,0 +1,11 @@
+./data_processing.py 
+	to generate random data (testfile_d.csv for datapoints, distmat_inv.csv for euclidean distance matrix)
+./personal_test_3.x 
+	to generate multiple distance matrices (distmat_it_x.csv) one for each zoomlevel
+./reshape_distmat_multi.py
+	to generate full scale distance matrices from matrix of each zoomlevel (distmat_it_x.csv to distmat_full_it_x.csv)
+./smacof_mds.x
+	to generate x-y-coordinates from distance matrices, one for each zoomlevel (result_zoom_x.csv)
+./plot.py
+	to make a scatter plot from these coordinates (result in plot.pdf)
+
